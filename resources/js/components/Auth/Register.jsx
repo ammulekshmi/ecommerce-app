@@ -16,7 +16,7 @@ function Register() {
         setSuccess('');
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const response = await axios.post('/register', {
+            const response = await axios.post('/api/register', {
                 name,
                 email,
                 password,

@@ -1,7 +1,7 @@
 <?php
 // routes/web.php
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // Keep this if you want Laravel's auth routes
+//use Illuminate\Support\Facades\Auth; // Keep this if you want Laravel's auth routes
 
 /*
 |--------------------------------------------------------------------------

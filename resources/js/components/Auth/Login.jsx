@@ -16,7 +16,7 @@ function Login({ onLoginSuccess }) {
         setError(''); // Clear previous errors
 
         try {
-            const response = await axios.post('/login', { email, password });
+            const response = await axios.post('/api/login', { email, password });
 
             if (response.status === 200) {
                 console.log('Login successful:', response.data);
