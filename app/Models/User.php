@@ -52,4 +52,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    // Relationship for the user's cart
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
 }

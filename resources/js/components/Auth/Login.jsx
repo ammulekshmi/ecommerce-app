@@ -1,49 +1,40 @@
-// resources/js/components/Auth/Login.jsx
+// resources/js/components/Login.jsx
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthContext';
 
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-function Login({ onLoginSuccess }) {
+function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [feedback, setFeedback] = useState('');
+    const { login, isAuthenticated, authLoading } = useContext(AuthContext); // Use login from context
+    const navigate = useNavigate();
 
-    const navigate = useNavigate(); // Initialize useNavigate hook
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate('/'); // Redirect to home or dashboard
+        }
+    }, [isAuthenticated, authLoading, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // Clear previous errors
+        setFeedback('');
 
-        try {
-            const response = await axios.post('/api/login', { email, password });
+        const result = await login({ email, password });
 
-            if (response.status === 200) {
-                console.log('Login successful:', response.data);
-                if (onLoginSuccess) {
-                    onLoginSuccess(); // Notify App.jsx to re-check auth status
-                }
-                navigate('/'); // Redirect to the homepage
-            } else {
-                // This block might not be hit if Axios throws an error for non-2xx responses
-                setError('Login failed. Please check your credentials.');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            if (error.response) {
-                // Handle specific HTTP error responses
-                if (error.response.status === 422) {
-                    setError('Validation error. Please check your inputs.');
-                } else if (error.response.status === 401) {
-                    setError('Invalid credentials. Please try again.');
-                } else {
-                    setError('An unexpected error occurred. Please try again later.');
-                }
-            } else {
-                setError('Network error. Could not connect to the server.');
-            }
+        if (result.success) {
+            setFeedback({ type: 'success', message: result.message });
+            // The useEffect will handle navigation
+        } else {
+            setFeedback({ type: 'error', message: result.message });
         }
     };
+
+    if (authLoading || isAuthenticated) {
+        return <div className="text-center mt-5">Loading...</div>; // Or a spinner
+    }
 
     return (
         <div className="container mt-5">
@@ -52,31 +43,40 @@ function Login({ onLoginSuccess }) {
                     <div className="card">
                         <div className="card-header">Login</div>
                         <div className="card-body">
+                            {feedback.message && (
+                                <div className={`alert alert-${feedback.type === 'success' ? 'success' : 'danger'}`}>
+                                    {feedback.message}
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit}>
-                                {error && <div className="alert alert-danger">{error}</div>}
                                 <div className="mb-3">
-                                    <label htmlFor="email" className="form-label">Email address</label>
+                                    <label htmlFor="emailInput" className="form-label">Email address</label>
                                     <input
                                         type="email"
                                         className="form-control"
-                                        id="email"
+                                        id="emailInput"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label htmlFor="password" className="form-label">Password</label>
+                                    <label htmlFor="passwordInput" className="form-label">Password</label>
                                     <input
                                         type="password"
                                         className="form-control"
-                                        id="password"
+                                        id="passwordInput"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
                                     />
                                 </div>
-                                <button type="submit" className="btn btn-primary">Login</button>
+                                <button type="submit" className="btn btn-primary" disabled={authLoading}>
+                                    {authLoading ? 'Logging in...' : 'Login'}
+                                </button>
+                                <p className="mt-3">
+                                    Don't have an account? <Link to="/register">Register here</Link>
+                                </p>
                             </form>
                         </div>
                     </div>

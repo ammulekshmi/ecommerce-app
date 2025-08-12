@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\CartItem;
+use App\Models\Cart;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Category; // Make sure to use Category if needed for ProductSeeder
@@ -57,13 +58,19 @@ class CartItemSeeder extends Seeder
                 // Check if this user already has this product in their cart
                 // (This is redundant if the unique constraint is the only protector,
                 // but good for explicit logic if quantity updates are needed in a real app)
-                $existingCartItem = CartItem::where('user_id', $user->id)
+                // Get or create the cart for this user
+                $cart = Cart::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['session_id' => null]
+                );
+                $existingCartItem = CartItem::whereHas('cart', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
                     ->where('product_id', $product->id)
                     ->first();
-
                 if (!$existingCartItem) {
                     CartItem::create([
-                        'user_id' => $user->id,
+                        'cart_id' => $cart->id,
                         'product_id' => $product->id,
                         'quantity' => rand(1, 3),
                     ]);

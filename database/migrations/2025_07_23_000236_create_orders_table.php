@@ -18,7 +18,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->decimal('total_amount', 10, 2);
             $table->string('status')->default('pending'); // pending, processing, completed, cancelled
-            $table->text('shipping_address')->nullable();
+            $table->json('shipping_address')->nullable(); // Added
+            $table->json('billing_address')->nullable();  // Added
             $table->timestamps();
         });
 

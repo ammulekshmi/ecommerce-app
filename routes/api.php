@@ -2,43 +2,38 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController; // Use AuthController
 use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\CartItemController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Auth\LoginController; // For API login
+use App\Http\Controllers\Api\CategoryController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
 
-// Authentication API
-Route::post('/login', [LoginController::class, 'authenticate']); // We will use Laravel's default login
-Route::post('/register', [LoginController::class, 'register']); // We will create this method in LoginController
+// Public routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{product}', [ProductController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']);
 
-// Protected API routes (require authentication)
+// Cart routes (can be accessed by guests via session, or authenticated users)
+Route::prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'index']);
+    Route::post('/', [CartController::class, 'store']);
+    Route::put('/{cartItem}', [CartController::class, 'update']);
+    Route::delete('/{cartItem}', [CartController::class, 'destroy']);
+});
+
+
+// Protected routes (require a Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    Route::post('/logout', [LoginController::class, 'logout']);
 
-    // Resource routes for Products, Categories, Cart, Orders
-    Route::apiResource('products', ProductController::class);
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('cart-items', CartItemController::class);
-    Route::apiResource('orders', OrderController::class);
-
-    // Custom cart actions
-    Route::post('/cart-items/add', [CartItemController::class, 'addToCart']);
-    Route::post('/cart-items/remove', [CartItemController::class, 'removeFromCart']);
-    Route::put('/cart-items/{product_id}', [CartItemController::class, 'updateQuantity']);
-    Route::post('/checkout', [OrderController::class, 'checkout']);
+    // Checkout and Order management
+    Route::post('/checkout', [OrderController::class, 'store']);
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{order}', [OrderController::class, 'show']);
 });
